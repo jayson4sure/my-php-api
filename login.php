@@ -1,46 +1,42 @@
 <?php
+// Always set CORS headers
+header("Access-Control-Allow-Origin: *"); // Change '*' to your frontend domain in production
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
 
-header("Content-Type: application/json");
-header("Access-Control-Allow-Origin: *");
-
-include 'db.php';
-
-$username = $_POST['username'] ?? '';
-$password = $_POST['password'] ?? '';
-
-if (empty($username) || empty($password)) {
-    echo json_encode([
-        "success" => false,
-        "message" => "Username and password required"
-    ]);
-    exit;
+// Handle preflight (OPTIONS) requests
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit(0);
 }
 
-$query = "SELECT * FROM users WHERE username = $1 AND password = $2";
+// Include the database connection
+require 'db_connect.php';
 
-$result = pg_query_params(
-    $conn,
-    $query,
-    [$username, $password]
-);
+// Use $_POST for POST request; fallback to $_REQUEST
+$user_input = $_POST['username'] ?? $_REQUEST['username'] ?? '';
 
-if (pg_num_rows($result) > 0) {
+if (empty($user_input)) {
+    echo json_encode(["error" => "field is empty"]);
+    exit();
+}
 
-    $user = pg_fetch_assoc($result);
+// Prepare SQL statement to fetch user data
+$sql = "SELECT * FROM USERS WHERE (username = ? OR email = ?) AND password != ''";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("ss", $user_input, $user_input);
+$stmt->execute();
+$result = $stmt->get_result();
 
-    echo json_encode([
-        "success" => true,
-        "message" => "Login successful",
-        "user" => [
-            "id" => $user['id'],
-            "username" => $user['username']
-        ]
-    ]);
-
+// Check if user exists
+if ($result->num_rows > 0) {
+    $row = $result->fetch_assoc();
+    echo json_encode(["status" => "success", "msg" => "user found"]);
 } else {
-
-    echo json_encode([
-        "success" => false,
-        "message" => "Invalid username or password"
-    ]);
+    echo json_encode(["status" => "fail", "error" => "user not found"]);
 }
+
+// Close statement and connection
+$stmt->close();
+$conn->close();
+?>
