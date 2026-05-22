@@ -3,13 +3,7 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: *");
 header("Content-Type: application/json");
 
-$conn = pg_connect("
-    host=YOUR_HOST
-    port=5432
-    dbname=YOUR_DB
-    user=YOUR_USER
-    password=YOUR_PASSWORD
-");
+require 'db_connect.php';
 
 if (!$conn) {
     die(json_encode(["error" => "Database connection failed"]));
