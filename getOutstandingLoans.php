@@ -63,17 +63,13 @@ WHERE l.user_id = $1
 $params = [$user_id];
 $paramIndex = 2;
 
-// ================================
-// OPTIONAL FILTER
-// ================================
+// Optional filter
 if (!empty($loan_id)) {
     $query .= " AND l.loan_id = $" . $paramIndex;
     $params[] = $loan_id;
 }
 
-// ================================
-// GROUP BY (REQUIRED IN POSTGRES)
-// ================================
+// GROUP BY (required)
 $query .= "
 GROUP BY 
     l.loan_id,
@@ -96,12 +92,22 @@ $loans = [];
 
 if ($result) {
     while ($row = pg_fetch_assoc($result)) {
-        // Optional: clean nulls
-        $cleanRow = array_map(function ($value) {
-            return $value === null ? '' : $value;
-        }, $row);
 
-        $loans[] = $cleanRow;
+        // 🔥 FORCE CORRECT TYPES
+        $row['loan_id']               = intval($row['loan_id']);
+        $row['user_id']              = intval($row['user_id']);
+        $row['months_payable']       = intval($row['months_payable']);
+        $row['progress']             = intval($row['progress']);
+        $row['due_status']           = intval($row['due_status']);
+        $row['loan_application_id']  = intval($row['loan_application_id']);
+
+        // Optional: keep decimals as string OR float (your choice)
+        // If Flutter expects string, keep as is
+        // If you want float:
+        // $row['interest_rate'] = floatval($row['interest_rate']);
+        // $row['loan_application_amount'] = floatval($row['loan_application_amount']);
+
+        $loans[] = $row;
     }
 
     echo json_encode([
@@ -116,8 +122,5 @@ if ($result) {
     ]);
 }
 
-// ================================
-// CLEANUP
-// ================================
 pg_close($conn);
 ?>
