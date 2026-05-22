@@ -30,12 +30,12 @@ SELECT
     l.user_id,
     l.months_payable,
 
-    COUNT(*) FILTER (WHERE las.status = 'PAID') AS progress,
+    COUNT(*) FILTER (WHERE las.status = 'paid') AS progress,
 
     CASE 
         WHEN COUNT(*) FILTER (
             WHERE las.due_dates < CURRENT_DATE
-            AND las.status <> 'PAID'
+            AND las.status <> 'paid'
         ) > 0 THEN 1
         ELSE 0
     END AS due_status,
