@@ -68,6 +68,11 @@ try {
         $notifications = [];
 
         while ($row = pg_fetch_assoc($result)) {
+
+            $row['notification_id'] = intval($row['notification_id']);
+            $row['user_id'] = intval($row['user_id']);
+            $row['is_read'] = intval($row['is_read']);
+            
             $notifications[] = $row;
         }
 
