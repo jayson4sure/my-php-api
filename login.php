@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Include the database connection
-require 'db_connect.php';
+require 'db.php';
 
 // Use $_POST for POST request; fallback to $_REQUEST
 $user_input = $_POST['username'] ?? $_REQUEST['username'] ?? '';
