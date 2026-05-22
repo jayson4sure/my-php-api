@@ -12,13 +12,18 @@ if (!$conn) {
     ]));
 }
 
-// Auth
+// ================================
+// AUTH
+// ================================
 $auth = $_SERVER['HTTP_AUTHENTICATION'] ?? '';
 list($id, $auth_token) = explode(':', $auth) + [null, null];
 
 $user_id = intval($id);
-$loan_id = $_REQUEST['loan_id'] ?? null;
+$loan_id = isset($_REQUEST['loan_id']) ? intval($_REQUEST['loan_id']) : null;
 
+// ================================
+// QUERY
+// ================================
 $query = "
 SELECT 
     l.loan_id,
@@ -56,14 +61,19 @@ WHERE l.user_id = $1
 ";
 
 $params = [$user_id];
-$index = 2;
+$paramIndex = 2;
 
-// Optional filter
+// ================================
+// OPTIONAL FILTER
+// ================================
 if (!empty($loan_id)) {
-    $query .= " AND l.loan_id = $" . $index;
+    $query .= " AND l.loan_id = $" . $paramIndex;
     $params[] = $loan_id;
 }
 
+// ================================
+// GROUP BY (REQUIRED IN POSTGRES)
+// ================================
 $query .= "
 GROUP BY 
     l.loan_id,
@@ -77,13 +87,21 @@ GROUP BY
     la.amount
 ";
 
+// ================================
+// EXECUTE
+// ================================
 $result = pg_query_params($conn, $query, $params);
 
 $loans = [];
 
 if ($result) {
     while ($row = pg_fetch_assoc($result)) {
-        $loans[] = $row;
+        // Optional: clean nulls
+        $cleanRow = array_map(function ($value) {
+            return $value === null ? '' : $value;
+        }, $row);
+
+        $loans[] = $cleanRow;
     }
 
     echo json_encode([
@@ -98,5 +116,8 @@ if ($result) {
     ]);
 }
 
+// ================================
+// CLEANUP
+// ================================
 pg_close($conn);
 ?>
