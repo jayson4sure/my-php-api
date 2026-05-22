@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // Include PostgreSQL connection
-require 'db.php';
+require 'db_connect.php';
 
 // Get username/email input
 $user_input = $_POST['username'] ?? $_REQUEST['username'] ?? '';
