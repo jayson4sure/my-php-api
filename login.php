@@ -49,7 +49,7 @@ if (pg_num_rows($result) > 0) {
     echo json_encode([
         "status" => "success",
         "msg" => "user found",
-        "user" => $row
+        // "user" => $row
     ]);
 
 } else {
