@@ -35,6 +35,9 @@ $data = [];
 
 if ($result) {
     while ($row = pg_fetch_assoc($result)) {
+
+        $row['schedule_id'] = intval($row['schedule_id']);
+        
         $data[] = $row;
     }
 }
