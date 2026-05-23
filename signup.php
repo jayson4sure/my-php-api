@@ -6,7 +6,6 @@ header('Content-Type: application/json');
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $email = isset($_POST['email']) ? trim($_POST['email']) : '';
-    $password = isset($_POST['password']) ? trim($_POST['password']) : '';
 
     if (empty($email)) {
         echo json_encode([
@@ -27,31 +26,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             'status' => 'error',
             'error' => 'Email does not exist.'
         ]);
-        exit;
-    }
-
-    // Handle password
-    if (!empty($password)) {
-        $passwordhash = password_hash($password, PASSWORD_BCRYPT);
     } else {
-        $passwordhash = "";
-    }
-
-    // Update password
-    $update = pg_query_params($conn,
-        "UPDATE USERS SET password = $1 WHERE email = $2",
-        array($passwordhash, $email)
-    );
-
-    if ($update) {
         echo json_encode([
             'status' => 'success',
-            'message' => 'Password updated successfully.'
-        ]);
-    } else {
-        echo json_encode([
-            'status' => 'error',
-            'error' => 'Failed to update password.'
+            'message' => 'Email exists.'
         ]);
     }
 
