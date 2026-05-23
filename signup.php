@@ -1,51 +1,62 @@
 <?php
-require 'db_connect.php'; // Include your database connection file
+require 'db_connect.php';
 
 header('Content-Type: application/json');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email = trim($_REQUEST['email']);
-    $password = trim($_REQUEST['password']);
-    $passwordhash = password_hash($password, PASSWORD_BCRYPT); // Encrypt password
 
-    // Check if the email exists in the USERS table
-    $stmt = $conn->prepare("SELECT user_id FROM USERS WHERE email = ?");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $stmt->store_result();
+    $email = isset($_POST['email']) ? trim($_POST['email']) : '';
+    $password = isset($_POST['password']) ? trim($_POST['password']) : '';
 
-    if ($stmt->num_rows == 0) {
-        // Email does not exist
+    if (empty($email)) {
         echo json_encode([
             'status' => 'error',
-            'error' => 'email does not exist.'
+            'error' => 'Email is required.'
         ]);
-    } else {
-        if (empty($password)) {
-            $passwordhash = "";
-        }
-
-        // Update privilege_passcode for the given email
-        $stmt->close();
-        $update_stmt = $conn->prepare("UPDATE USERS SET password = ? WHERE email = ?");
-        $update_stmt->bind_param("ss", $passwordhash, $email);
-
-        if ($update_stmt->execute()) {
-            echo json_encode([
-                'status' => 'success',
-                'message' => 'Password updated successfully.'
-            ]);
-        } else {
-            echo json_encode([
-                'status' => 'error',
-                'error' => 'Failed to update password.'
-            ]);
-        }
-
-        $update_stmt->close();
+        exit;
     }
 
-    $conn->close();
+    // Check if email exists
+    $result = pg_query_params($conn,
+        "SELECT user_id FROM USERS WHERE email = $1",
+        array($email)
+    );
+
+    if (pg_num_rows($result) == 0) {
+        echo json_encode([
+            'status' => 'error',
+            'error' => 'Email does not exist.'
+        ]);
+        exit;
+    }
+
+    // Handle password
+    if (!empty($password)) {
+        $passwordhash = password_hash($password, PASSWORD_BCRYPT);
+    } else {
+        $passwordhash = "";
+    }
+
+    // Update password
+    $update = pg_query_params($conn,
+        "UPDATE USERS SET password = $1 WHERE email = $2",
+        array($passwordhash, $email)
+    );
+
+    if ($update) {
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'Password updated successfully.'
+        ]);
+    } else {
+        echo json_encode([
+            'status' => 'error',
+            'error' => 'Failed to update password.'
+        ]);
+    }
+
+    pg_close($conn);
+
 } else {
     echo json_encode([
         'status' => 'error',
