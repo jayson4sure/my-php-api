@@ -5,7 +5,8 @@ header('Content-Type: application/json');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    $email = isset($_POST['email']) ? trim($_POST['email']) : '';
+    // $email = isset($_POST['email']) ? trim($_POST['email']) : '';
+    $email = isset($_REQUEST['email']) ? trim($_REQUEST['email']) : '';
 
     if (empty($email)) {
         echo json_encode([
