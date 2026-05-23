@@ -3,8 +3,6 @@ require 'db_connect.php';
 
 header('Content-Type: application/json');
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-
     // $email = isset($_POST['email']) ? trim($_POST['email']) : '';
     $email = isset($_REQUEST['email']) ? trim($_REQUEST['email']) : '';
 
@@ -35,11 +33,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     pg_close($conn);
-
-} else {
-    echo json_encode([
-        'status' => 'error',
-        'error' => 'Invalid request method.'
-    ]);
-}
 ?>
