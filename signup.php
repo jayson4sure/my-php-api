@@ -1,70 +1,48 @@
 <?php
-// ✅ CORS (what you requested)
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, authentication");
 
-// 🔴 CRITICAL: prevent warnings breaking JSON
-error_reporting(0);
-ini_set('display_errors', 0);
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    exit;
+}
 
 require 'db_connect.php';
 
 header('Content-Type: application/json');
 
-// Always return JSON (even on fatal errors)
 function send($data) {
     echo json_encode($data);
     exit;
 }
 
-// Get email safely (supports GET + POST)
 $email = isset($_REQUEST['email']) ? trim($_REQUEST['email']) : '';
 
 if ($email === '') {
-    send([
-        'status' => 'error',
-        'error' => 'Email is required.'
-    ]);
+    send(['status' => 'error', 'error' => 'Email is required.']);
 }
 
-// Validate DB connection
-if (!$conn) {
-    send([
-        'status' => 'error',
-        'error' => 'Database connection failed.'
-    ]);
-}
-
-// Query safely
-$result = @pg_query_params(
+$result = pg_query_params(
     $conn,
-    "SELECT user_id FROM users WHERE email = $1",
+    "SELECT password FROM users WHERE email = $1",
     array($email)
 );
 
-// Check query failure
-if ($result === false) {
-    send([
-        'status' => 'error',
-        'error' => 'Database query failed.'
-    ]);
+if (!$result) {
+    send(['status' => 'error', 'error' => pg_last_error($conn)]);
 }
 
-// Check result
 if (pg_num_rows($result) === 0) {
-    send([
-        'status' => 'error',
-        'error' => 'Email does not exist.'
-    ]);
+    send(['status' => 'error', 'error' => 'email does not exist.']);
 }
 
-// Success
-send([
-    'status' => 'success',
-    'message' => 'Email exists.'
-]);
+$row = pg_fetch_assoc($result);
 
-// Close connection
+if (empty($row['password'])) {
+    send(['status' => 'success', 'message' => 'proceed to sign-up']);
+} else {
+    send(['status' => 'success', 'message' => 'user already signed-up']);
+}
+
 pg_close($conn);
 ?>
