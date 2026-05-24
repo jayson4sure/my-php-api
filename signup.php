@@ -1,4 +1,9 @@
 <?php
+// ✅ CORS (what you requested)
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, authentication");
+
 // 🔴 CRITICAL: prevent warnings breaking JSON
 error_reporting(0);
 ini_set('display_errors', 0);
